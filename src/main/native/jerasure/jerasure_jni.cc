@@ -23,13 +23,8 @@
 #include <string.h>
 
 static jintArray makeRow(JNIEnv *env, int *elements, jsize count) {
-  jclass intClass = (*env)->FindClass(env, "java/lang/Integer");
-  jintArray row = (*env)->NewObjectArray(env, count, intClass, 0);
-
-  jsize index = 0;
-  for (; index < count; ++index) {
-    (*env)->SetObjectArrayElement(env, row, index, elements[index]);
-  }
+  jintArray row = env->NewIntArray(count);
+  env->SetIntArrayRegion(row, 0, count, elements);
   return row;
 }
 
@@ -41,16 +36,16 @@ JNIEXPORT jobjectArray JNICALL
   int *elements = new int[k];
   memcpy(elements, matrix, sizeof(int) * k);
   jintArray row = makeRow(env, elements, k);
-  jclass arrayClass = (*env)->GetObjectClass(env, row);
+  jclass arrayClass = env->GetObjectClass(row);
 
-  jobjectArray result = (*env)->NewObjectArray(env, m, arrayClass, NULL);
-  (*env)->SetObjectArrayElement(env, result, 0, row);
+  jobjectArray result = env->NewObjectArray(m, arrayClass, NULL);
+  env->SetObjectArrayElement(result, 0, row);
 
   int index = 1;
   for (; index < m; ++index) {
     memcpy(elements, matrix + index * sizeof(int) * k, sizeof(int) * k);
     row = makeRow(env, elements, k);
-    (*env)->SetObjectArrayElement(env, result, index, row);
+    env->SetObjectArrayElement(result, index, row);
   }
 
   delete[] elements;
