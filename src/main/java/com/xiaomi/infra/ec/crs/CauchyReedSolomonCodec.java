@@ -45,7 +45,7 @@ public class CauchyReedSolomonCodec implements CodecInterface {
     this.wordSize = wordSize;
     this.packetSize = packetSize;
 
-    byte[][] matrix = createCauchyMatrix(dataBlockNum,
+    int[][] matrix = createCauchyMatrix(dataBlockNum,
         codingBlockNum, wordSize);
     this.cauchyBitMatrix = convertToBitMatrix(dataBlockNum,
         codingBlockNum, wordSize, matrix);
@@ -73,7 +73,7 @@ public class CauchyReedSolomonCodec implements CodecInterface {
    * @param w The word size, used to define the finite field
    * @return The generated Cauchy matrix
    */
-  private native byte[][] createCauchyMatrix(int k, int m , int w);
+  private native int[][] createCauchyMatrix(int k, int m , int w);
 
   /**
    * Converts the Cauchy matrix to a bit matrix over GF(2^w).
@@ -85,7 +85,7 @@ public class CauchyReedSolomonCodec implements CodecInterface {
    * @return The converted bit matrix
    */
   private native byte[][] convertToBitMatrix(int k, int m, int w,
-      byte[][] matrix);
+      int[][] matrix);
 
   /**
    * Encodes specified data blocks using given Cauchy matrix and packet size.
