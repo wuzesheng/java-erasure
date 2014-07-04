@@ -29,7 +29,7 @@ public class ReedSolomonCodec implements CodecInterface {
   private int dataBlockNum;
   private int codingBlockNum;
   private int wordSize;
-  private byte[][] vandermondeMatrix;
+  private int[][] vandermondeMatrix;
 
   public ReedSolomonCodec(int dataBlockNum, int codingBlockNum, int wordSize) {
     Preconditions.checkArgument(dataBlockNum > 0);
@@ -66,7 +66,7 @@ public class ReedSolomonCodec implements CodecInterface {
    * @param w The word size, used to define the finite field
    * @return The generated Vandermonde matrix
    */
-  private native byte[][] createVandermondeMatrix(int k, int m, int w);
+  private native int[][] createVandermondeMatrix(int k, int m, int w);
 
   /**
    * Encodes specified data blocks using the given Vandermonde matrix.
@@ -78,7 +78,7 @@ public class ReedSolomonCodec implements CodecInterface {
    * @param data The data blocks matrix
    * @return The coding blocks matrix
    */
-  private native byte[][] encode(int k, int m, int w, byte[][] matrix,
+  private native byte[][] encode(int k, int m, int w, int[][] matrix,
       byte[][] data);
 
   /**
@@ -93,6 +93,6 @@ public class ReedSolomonCodec implements CodecInterface {
    * @param data The data blocks matrix
    * @param coding The coding blocks matrix
    */
-  private native void decode(int k, int m, int w, byte[][] matrix,
+  private native void decode(int k, int m, int w, int[][] matrix,
       int[] erasures, byte[][] data, byte[][] coding);
 }
