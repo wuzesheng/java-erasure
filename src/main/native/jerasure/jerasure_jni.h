@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef JAVA_ERASURE_JERASURE_H_
-#define JAVA_ERASURE_JERASURE_H_
+#ifndef JAVA_ERASURE_JERASURE_JNI_H_
+#define JAVA_ERASURE_JERASURE_JNI_H_
 
 #include <jni.h>
 
@@ -128,4 +128,4 @@ JNIEXPORT void JNICALL Java_com_xiaomi_infra_ec_CauchyReedSolomonCodec_decode(
 }
 #endif // __cplusplus
 
-#endif // JAVA_ERASURE_JERASURE_H_
+#endif // JAVA_ERASURE_JERASURE_JNI_H_
