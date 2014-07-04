@@ -17,18 +17,91 @@
  */
 package com.xiaomi.infra.ec;
 
+import com.xiaomi.infra.ec.crs.CauchyReedSolomonCodec;
+import com.xiaomi.infra.ec.rs.ReedSolomonCodec;
+
 /**
  * ErasureCodec defines methods for users to encode given data block to
  * erasure codes block, and to decode data block from given data and erasure
  * codes blocks.
  */
-public class ErasureCodec {
+public class ErasureCodec implements CodecInterface {
 
-  public static byte[][] encode(int k, int m, int w, byte[][] data) {
-    return null;
+  /**
+   * Currently supported coding algorithms.
+   */
+  public enum Algorithm {
+    Reed_Solomon,
+    Cauchy_Reed_Solomon;
   }
 
-  public static byte[][] decode(int k, int m, int w, byte[][] survivor) {
-    return null;
+  /**
+   * Builder class for ErasureCodec.
+   */
+  public static class Builder {
+    private Algorithm algorithm;
+    private int dataBlockNum;
+    private int codingBlockNum;
+    private int wordSize;
+    private int packetSize;
+
+    public Builder(Algorithm algorithm) {
+      this.algorithm = algorithm;
+    }
+
+    public ErasureCodec build() {
+      CodecInterface codec = null;
+      switch (algorithm) {
+        case Reed_Solomon:
+          codec = new ReedSolomonCodec(dataBlockNum, codingBlockNum, wordSize);
+          break;
+        case Cauchy_Reed_Solomon:
+          codec = new CauchyReedSolomonCodec(dataBlockNum, codingBlockNum,
+              wordSize, packetSize);
+          break;
+        default:
+          throw new IllegalArgumentException("Algorithm is supported: "
+              + algorithm);
+      }
+      return new ErasureCodec(codec);
+    }
+
+    public Builder dataBlockNum(int dataBlockNum) {
+      this.dataBlockNum = dataBlockNum;
+      return this;
+    }
+
+    public Builder codingBlockNum(int codingBlockNum) {
+      this.codingBlockNum = codingBlockNum;
+      return this;
+    }
+
+    public Builder wordSize(int wordSize) {
+      this.wordSize = wordSize;
+      return this;
+    }
+
+    public Builder packetSize(int packetSize) {
+      this.packetSize = packetSize;
+      return this;
+    }
+  }
+
+  private CodecInterface wrappedCodec;
+
+  private ErasureCodec(CodecInterface codec) {
+    wrappedCodec = codec;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public byte[][] encode(byte[][] data) {
+    return wrappedCodec.encode(data);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void decode(int[] erasures, byte[][] data, byte[][] coding) {
+    wrappedCodec.decode(erasures, data, coding);
   }
 }
