@@ -20,6 +20,7 @@ package com.xiaomi.infra.ec.rs;
 import com.google.common.base.Preconditions;
 
 import com.xiaomi.infra.ec.CodecInterface;
+import com.xiaomi.infra.ec.JerasureLibrary;
 
 /**
  * Normal Reed Solomon erasure codec, implemented with Vandermonde matrix.
@@ -29,7 +30,7 @@ public class ReedSolomonCodec implements CodecInterface {
   private int dataBlockNum;
   private int codingBlockNum;
   private int wordSize;
-  private int[][] vandermondeMatrix;
+  private int[] vandermondeMatrix;
 
   public ReedSolomonCodec(int dataBlockNum, int codingBlockNum, int wordSize) {
     Preconditions.checkArgument(dataBlockNum > 0);
@@ -47,15 +48,22 @@ public class ReedSolomonCodec implements CodecInterface {
   /** {@inheritDoc} */
   @Override
   public byte[][] encode(byte[][] data) {
-    return encode(dataBlockNum, codingBlockNum, wordSize,
-        vandermondeMatrix, data);
+    Preconditions.checkArgument(data.length > 0);
+    int size = data[0].length;
+    byte[][] coding = new byte[codingBlockNum][size];
+    JerasureLibrary.INSTANCE.jerasure_matrix_encode(dataBlockNum,
+        codingBlockNum, wordSize, vandermondeMatrix, data, coding, size);
+    return coding;
   }
 
   /** {@inheritDoc} */
   @Override
   public void decode(int[] erasures, byte[][]data, byte[][] coding) {
-    decode(dataBlockNum, codingBlockNum, wordSize, vandermondeMatrix,
-        erasures, data, coding);
+    Preconditions.checkArgument(data.length > 0);
+    int size = data[0].length;
+    JerasureLibrary.INSTANCE.jerasure_matrix_decode(dataBlockNum,
+        codingBlockNum, wordSize, vandermondeMatrix, 0, erasures,
+        data, coding, size);
   }
 
   /**
@@ -66,33 +74,9 @@ public class ReedSolomonCodec implements CodecInterface {
    * @param w The word size, used to define the finite field
    * @return The generated Vandermonde matrix
    */
-  private native int[][] createVandermondeMatrix(int k, int m, int w);
-
-  /**
-   * Encodes specified data blocks using the given Vandermonde matrix.
-   *
-   * @param k The number of data blocks
-   * @param m The number of coding blocks
-   * @param w The word size
-   * @param matrix The Vandermonde generate matrix of m x k
-   * @param data The data blocks matrix
-   * @return The coding blocks matrix
-   */
-  private native byte[][] encode(int k, int m, int w, int[][] matrix,
-      byte[][] data);
-
-  /**
-   * Decodes specified failed data blocks using the given  Vandermonde matrix,
-   * the survivor data and coding blocks.
-   *
-   * @param k The number of data blocks
-   * @param m The number of coding blocks
-   * @param w The word size
-   * @param matrix The Vandermonde generate matrix of m x k
-   * @param erasures The failed data blocks list
-   * @param data The data blocks matrix
-   * @param coding The coding blocks matrix
-   */
-  private native void decode(int k, int m, int w, int[][] matrix,
-      int[] erasures, byte[][] data, byte[][] coding);
+  int[] createVandermondeMatrix(int k, int m, int w) {
+    int[] matrix = JerasureLibrary.INSTANCE
+        .reed_sol_vandermonde_conding_matrix(k, m, w);
+    return matrix;
+  }
 }

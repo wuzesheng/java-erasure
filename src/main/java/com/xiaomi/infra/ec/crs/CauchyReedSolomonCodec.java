@@ -20,6 +20,7 @@ package com.xiaomi.infra.ec.crs;
 import com.google.common.base.Preconditions;
 
 import com.xiaomi.infra.ec.CodecInterface;
+import com.xiaomi.infra.ec.JerasureLibrary;
 
 /**
  * Reed Solomon erasure codec, implemented with Cauchy matrix.
@@ -30,7 +31,7 @@ public class CauchyReedSolomonCodec implements CodecInterface {
   private int codingBlockNum;
   private int wordSize;
   private int packetSize;
-  private byte[][] cauchyBitMatrix;
+  private int[] cauchyBitMatrix;
 
   public CauchyReedSolomonCodec(int dataBlockNum, int codingBlockNum,
       int wordSize, int packetSize) {
@@ -45,7 +46,7 @@ public class CauchyReedSolomonCodec implements CodecInterface {
     this.wordSize = wordSize;
     this.packetSize = packetSize;
 
-    int[][] matrix = createCauchyMatrix(dataBlockNum,
+    int[] matrix = createCauchyMatrix(dataBlockNum,
         codingBlockNum, wordSize);
     this.cauchyBitMatrix = convertToBitMatrix(dataBlockNum,
         codingBlockNum, wordSize, matrix);
@@ -54,15 +55,23 @@ public class CauchyReedSolomonCodec implements CodecInterface {
   /** {@inheritDoc} */
   @Override
   public byte[][] encode(byte[][] data) {
-    return encode(dataBlockNum, codingBlockNum, wordSize,
-        cauchyBitMatrix, data, packetSize);
+    Preconditions.checkArgument(data.length > 0);
+    int size = data[0].length;
+    byte[][] coding = new byte[codingBlockNum][size];
+    JerasureLibrary.INSTANCE.jerasure_bitmatrix_encode(dataBlockNum,
+        codingBlockNum, wordSize, cauchyBitMatrix, data, coding, size,
+        packetSize);
+    return coding;
   }
 
   /** {@inheritDoc} */
   @Override
   public void decode(int[] erasures, byte[][]data, byte[][] coding) {
-    decode(dataBlockNum, codingBlockNum, wordSize, cauchyBitMatrix,
-        erasures, data, coding, packetSize);
+    Preconditions.checkArgument(data.length > 0);
+    int size = data[0].length;
+    JerasureLibrary.INSTANCE.jerasure_bitmatrix_decode(dataBlockNum,
+        codingBlockNum, wordSize, cauchyBitMatrix, 0, erasures,
+        data, coding, size, packetSize);
   }
 
   /**
@@ -73,7 +82,11 @@ public class CauchyReedSolomonCodec implements CodecInterface {
    * @param w The word size, used to define the finite field
    * @return The generated Cauchy matrix
    */
-  private native int[][] createCauchyMatrix(int k, int m , int w);
+  int[] createCauchyMatrix(int k, int m , int w) {
+    int[] matrix = JerasureLibrary.INSTANCE
+        .cauchy_good_general_coding_matrix(k, m, w);
+    return matrix;
+  }
 
   /**
    * Converts the Cauchy matrix to a bit matrix over GF(2^w).
@@ -84,36 +97,9 @@ public class CauchyReedSolomonCodec implements CodecInterface {
    * @param matrix The cauchy matrix
    * @return The converted bit matrix
    */
-  private native byte[][] convertToBitMatrix(int k, int m, int w,
-      int[][] matrix);
-
-  /**
-   * Encodes specified data blocks using given Cauchy matrix and packet size.
-   *
-   * @param k The number of data blocks
-   * @param m The number of coding blocks
-   * @param w The word size
-   * @param matrix The cauchy bit matrix
-   * @param data The data blocks matrix
-   * @param packetSize The data packet size
-   * @return The coding blocks matrix
-   */
-  private native byte[][] encode(int k, int m, int w, byte[][] matrix,
-      byte[][] data, int packetSize);
-
-  /**
-   * Decodes specified failed data blocks using given Cauchy matrix, the
-   * survivor data, coding blocks, and packet size.
-   *
-   * @param k The number of data blocks
-   * @param m The number of coding blocks
-   * @param w The word size
-   * @param matrix The cauchy bit matrix
-   * @param erasures The failed data blocks list
-   * @param data The data blocks matrix
-   * @param coding The coding blocks matrix
-   * @param packetSize The data packet size
-   */
-  private native void decode(int k, int m, int w, byte[][] matrix,
-      int[] erasures, byte[][] data, byte[][] coding, int packetSize);
+  int[] convertToBitMatrix(int k, int m, int w, int[] matrix) {
+    int[] bit_matrix = JerasureLibrary.INSTANCE.jerasure_matrix_to_bitmatrix(
+        k, m, w, matrix);
+    return bit_matrix;
+  }
 }
