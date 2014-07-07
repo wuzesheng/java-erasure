@@ -20,39 +20,15 @@
 
 #include <assert.h>
 #include <jerasure.h>
+#include <jerasure/cauchy.h>
 #include <jerasure/reed_sol.h>
 #include <string.h>
 
 // Constructs a JNI intArray from a native int array
-static jintArray makeRow(JNIEnv *env, int *elements, jsize count) {
+jintArray makeRow(JNIEnv *env, int *elements, jsize count) {
   jintArray row = env->NewIntArray(count);
   env->SetIntArrayRegion(row, 0, count, elements);
   return row;
-}
-
-JNIEXPORT jobjectArray JNICALL
-  Java_com_xiaomi_infra_ec_ReedSolomonCodec_createVandermondeMatrix(
-      JNIEnv *env, jint k, jint m, jint w) {
-  // Create the Vandermonde matrix using jerasure
-  int *matrix = reed_sol_vandermonde_coding_matrix(k, m, w);
-
-  // Convert the matrix to two dimensional java array
-  int *elements = new int[k];
-  memcpy(elements, matrix, sizeof(int) * k);
-  jintArray row = makeRow(env, elements, k);
-  jclass arrayClass = env->GetObjectClass(row);
-
-  jobjectArray result = env->NewObjectArray(m, arrayClass, NULL);
-  env->SetObjectArrayElement(result, 0, row);
-
-  for (int index = 1; index < m; ++index) {
-    memcpy(elements, matrix + index * sizeof(int) * k, sizeof(int) * k);
-    row = makeRow(env, elements, k);
-    env->SetObjectArrayElement(result, index, row);
-  }
-
-  delete[] elements;
-  return result;
 }
 
 // Convert a java byte[][] array to a native char[][] array
@@ -137,6 +113,31 @@ void CopyDecodedData(JNIEnv *env, jobjectArray data,
 }
 
 JNIEXPORT jobjectArray JNICALL
+  Java_com_xiaomi_infra_ec_ReedSolomonCodec_createVandermondeMatrix(
+      JNIEnv *env, jint k, jint m, jint w) {
+  // Create the Vandermonde matrix using jerasure
+  int *matrix = reed_sol_vandermonde_coding_matrix(k, m, w);
+
+  // Convert the matrix to two dimensional java array
+  int *elements = new int[k];
+  memcpy(elements, matrix, sizeof(int) * k);
+  jintArray row = makeRow(env, elements, k);
+  jclass arrayClass = env->GetObjectClass(row);
+
+  jobjectArray result = env->NewObjectArray(m, arrayClass, NULL);
+  env->SetObjectArrayElement(result, 0, row);
+
+  for (int index = 1; index < m; ++index) {
+    memcpy(elements, matrix + index * sizeof(int) * k, sizeof(int) * k);
+    row = makeRow(env, elements, k);
+    env->SetObjectArrayElement(result, index, row);
+  }
+
+  delete[] elements;
+  return result;
+}
+
+JNIEXPORT jobjectArray JNICALL
   Java_com_xiaomi_infra_ec_ReedSolomonCodec_encode(JNIEnv *env, jint k,
       jint m, jint w, jobjectArray matrix, jobjectArray data) {
   int* nativeMatrix = ConvertToNativeIntArray(env, matrix);
@@ -168,6 +169,7 @@ JNIEXPORT void JNICALL Java_com_xiaomi_infra_ec_ReedSolomonCodec_decode(
 JNIEXPORT jobjectArray JNICALL
   Java_com_xiaomi_infra_ec_CauchyReedSolomonCodec_createCauchyMatrix(
       JNIEnv *env, jint k, jint m, jint w) {
+  int *matrix = cauchy_good_general_coding_matrix(k, m, w);
 }
 
 JNIEXPORT jobjectArray JNICALL
