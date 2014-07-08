@@ -36,18 +36,18 @@ public class TestErasureCodec {
         .codingBlockNum(3)
         .wordSize(8)
         .build();
-    runTest(codec, 6, 3, 8);
+    runTest(codec, 6, 3, 32);
   }
 
   @Test
   public void TestCauchyReedSolomonCodec() {
     ErasureCodec codec = new Builder(Algorithm.Cauchy_Reed_Solomon)
-        .dataBlockNum(4)
-        .codingBlockNum(2)
+        .dataBlockNum(6)
+        .codingBlockNum(3)
         .wordSize(4)
         .packetSize(8)
         .build();
-    runTest(codec, 4, 2, 32);
+    runTest(codec, 6, 3, 32);
   }
 
   private void runTest(CodecInterface codec, int k, int m, int size) {

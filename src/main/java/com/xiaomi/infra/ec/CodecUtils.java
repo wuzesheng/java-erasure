@@ -24,12 +24,18 @@ import com.sun.jna.Pointer;
 
 public class CodecUtils {
 
+  /**
+   * Adjusts the erasures array to satisfy the Jerasure library's requirements.
+   */
   public static int[] adjustErasures(int[] erasures) {
     int[] adjustedErasures =  Arrays.copyOf(erasures, erasures.length + 1);
     adjustedErasures[erasures.length] = -1;
     return adjustedErasures;
   }
 
+  /**
+   * Copies back the decoded and data and coding to the java specified buffers.
+   */
   public static void copyBackDecoded(Pointer[] dataPtrs, Pointer[] codingPtrs,
       int[] erasures, byte[][] data,
       byte[][] coding) {
@@ -49,6 +55,9 @@ public class CodecUtils {
     }
   }
 
+  /**
+   * Converts a java byte[][] array to JNA Pointer[] array.
+   */
   public static Pointer[] toPointerArray(byte[][] array) {
     Pointer[] ptrArray = new Pointer[array.length];
     for (int i = 0; i < array.length; ++i) {
@@ -58,6 +67,9 @@ public class CodecUtils {
     return ptrArray;
   }
 
+  /**
+   * Converts JNA Pointer[] array to java byte[][] array.
+   */
   public static void toByteArray(Pointer[] ptrArray, byte[][] array) {
     for (int i = 0; i < array.length; ++i) {
       byte[] arr = ptrArray[i].getByteArray(0, array[i].length);
@@ -65,6 +77,9 @@ public class CodecUtils {
     }
   }
 
+  /**
+   * Prints a byte[][] array as a matrix.
+   */
   public static void printMatrix(byte[][] matrix) {
     for (int i = 0; i < matrix.length; ++i) {
       for (int j = 0; j < matrix[i].length; ++j) {
@@ -75,6 +90,9 @@ public class CodecUtils {
     System.out.println();
   }
 
+  /**
+   * Prints a int[] array as a matrix.
+   */
   public static void printMatrix(int[] matrix, int row, int col) {
     for (int i = 0; i < row; ++i) {
       for (int j = 0; j < col; ++j) {
