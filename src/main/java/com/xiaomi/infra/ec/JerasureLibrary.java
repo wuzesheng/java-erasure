@@ -19,6 +19,7 @@ package com.xiaomi.infra.ec;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;
+import com.sun.jna.Pointer;
 
 /**
  * A simple JNA wrapper of Jerasure{@see https://bitbucket.org/jimplank/jerasure}.
@@ -26,22 +27,22 @@ import com.sun.jna.Native;
 public interface JerasureLibrary extends Library {
 
   JerasureLibrary INSTANCE = (JerasureLibrary) Native.loadLibrary(
-      "jerasure", JerasureLibrary.class);
+      "Jerasure", JerasureLibrary.class);
 
   /**
    * Allocates and returns a m × k Vandermonde matrix in GF(2^w).
    */
-  int[] reed_sol_vandermonde_conding_matrix(int k, int m, int w);
+  Pointer reed_sol_vandermonde_coding_matrix(int k, int m, int w);
 
   /**
    * Allocates and returns a Cauchy matrix in GF(2^w).
    */
-  int[] cauchy_good_general_coding_matrix(int k, int m, int w);
+  Pointer cauchy_good_general_coding_matrix(int k, int m, int w);
 
   /**
    * Converts a m × k matrix in GF(2^w) to a wm × wk bit-matrix.
    */
-  int[] jerasure_matrix_to_bitmatrix(int k, int m, int w, int[] matrix);
+  Pointer jerasure_matrix_to_bitmatrix(int k, int m, int w, int[] matrix);
 
   /**
    * Encodes with a specified matrix in GF(2^w). w must be ∈ {8, 16, 32}.
@@ -57,7 +58,7 @@ public interface JerasureLibrary extends Library {
    * @param size The total number of bytes per device to encode
    */
   void jerasure_matrix_encode(int k, int m, int w, int[] matrix,
-      byte[][] data_ptrs, byte[][] coding_ptrs, int size);
+      Pointer[] data_ptrs, Pointer[] coding_ptrs, int size);
 
   /**
    * Decodes with a specified matrix in GF(2^w). w must be ∈ {8, 16, 32}.
@@ -77,8 +78,8 @@ public interface JerasureLibrary extends Library {
    * @return
    */
   int jerasure_matrix_decode(int k, int m, int w, int[] matrix,
-      int row_k_ones, int[] erasures, byte[][] data_ptrs,
-      byte[][] coding_ptrs, int size);
+      int row_k_ones, int[] erasures, Pointer[] data_ptrs,
+      Pointer[] coding_ptrs, int size);
 
   /**
    * Encodes with a specified bit-matrix. Now w may be any number between 1
@@ -97,7 +98,7 @@ public interface JerasureLibrary extends Library {
    * @param packetsize The packet size
    */
   void jerasure_bitmatrix_encode(int k, int m, int w, int[] bitmatrix,
-      byte[][] data_ptrs, byte[][] coding_ptrs, int size, int packetsize);
+      Pointer[] data_ptrs, Pointer[] coding_ptrs, int size, int packetsize);
 
   /**
    * Decodes with a specified bit-matrix. Now w may be any number between 1
@@ -119,6 +120,6 @@ public interface JerasureLibrary extends Library {
    * @param packetsize The packet size
    */
   int jerasure_bitmatrix_decode(int k, int m, int w, int[] bitmatrix,
-      int row_k_ones, int[] erasures, byte[][] data_ptrs,
-      byte[][] coding_ptrs, int size, int packetsize);
+      int row_k_ones, int[] erasures, Pointer[] data_ptrs,
+      Pointer[] coding_ptrs, int size, int packetsize);
 }

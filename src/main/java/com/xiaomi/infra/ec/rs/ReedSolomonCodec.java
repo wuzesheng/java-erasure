@@ -18,8 +18,10 @@
 package com.xiaomi.infra.ec.rs;
 
 import com.google.common.base.Preconditions;
+import com.sun.jna.Pointer;
 
 import com.xiaomi.infra.ec.CodecInterface;
+import com.xiaomi.infra.ec.CodecUtils;
 import com.xiaomi.infra.ec.JerasureLibrary;
 
 /**
@@ -37,6 +39,8 @@ public class ReedSolomonCodec implements CodecInterface {
     Preconditions.checkArgument(codingBlockNum > 0);
     Preconditions.checkArgument(wordSize == 8 || wordSize == 16 ||
         wordSize == 32, "wordSize must be one of 8, 16 and 32");
+    Preconditions.checkArgument((dataBlockNum + codingBlockNum) < (1<<wordSize),
+        "dataBlocksNum + codingBlocksNum is larger than 2^wordSize");
 
     this.dataBlockNum = dataBlockNum;
     this.codingBlockNum = codingBlockNum;
@@ -49,10 +53,15 @@ public class ReedSolomonCodec implements CodecInterface {
   @Override
   public byte[][] encode(byte[][] data) {
     Preconditions.checkArgument(data.length > 0);
+
+    Pointer[] dataPtrs = CodecUtils.toPointerArray(data);
     int size = data[0].length;
     byte[][] coding = new byte[codingBlockNum][size];
+    Pointer[] codingPtrs = CodecUtils.toPointerArray(coding);
+
     JerasureLibrary.INSTANCE.jerasure_matrix_encode(dataBlockNum,
-        codingBlockNum, wordSize, vandermondeMatrix, data, coding, size);
+        codingBlockNum, wordSize, vandermondeMatrix, dataPtrs, codingPtrs, size);
+    CodecUtils.toByteArray(codingPtrs, coding);
     return coding;
   }
 
@@ -60,10 +69,16 @@ public class ReedSolomonCodec implements CodecInterface {
   @Override
   public void decode(int[] erasures, byte[][]data, byte[][] coding) {
     Preconditions.checkArgument(data.length > 0);
+
+    Pointer[] dataPtrs = CodecUtils.toPointerArray(data);
+    Pointer[] codingPtrs = CodecUtils.toPointerArray(coding);
+    erasures = CodecUtils.adjustErasures(erasures);
     int size = data[0].length;
+
     JerasureLibrary.INSTANCE.jerasure_matrix_decode(dataBlockNum,
-        codingBlockNum, wordSize, vandermondeMatrix, 0, erasures,
-        data, coding, size);
+        codingBlockNum, wordSize, vandermondeMatrix, 1, erasures,
+        dataPtrs, codingPtrs, size);
+    CodecUtils.copyBackDecoded(dataPtrs, codingPtrs, erasures, data, coding);
   }
 
   /**
@@ -75,8 +90,8 @@ public class ReedSolomonCodec implements CodecInterface {
    * @return The generated Vandermonde matrix
    */
   int[] createVandermondeMatrix(int k, int m, int w) {
-    int[] matrix = JerasureLibrary.INSTANCE
-        .reed_sol_vandermonde_conding_matrix(k, m, w);
-    return matrix;
+    Pointer matrix = JerasureLibrary.INSTANCE
+        .reed_sol_vandermonde_coding_matrix(k, m, w);
+    return matrix.getIntArray(0, k * m);
   }
 }

@@ -17,5 +17,88 @@
  */
 package com.xiaomi.infra.ec;
 
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.xiaomi.infra.ec.ErasureCodec.Algorithm;
+import com.xiaomi.infra.ec.ErasureCodec.Builder;
+
 public class TestErasureCodec {
+
+  @Test
+  public void TestReedSolomonCodec() {
+    ErasureCodec codec = new Builder(Algorithm.Reed_Solomon)
+        .dataBlockNum(6)
+        .codingBlockNum(3)
+        .wordSize(8)
+        .build();
+    runTest(codec, 6, 3, 8);
+  }
+
+  @Test
+  public void TestCauchyReedSolomonCodec() {
+    ErasureCodec codec = new Builder(Algorithm.Cauchy_Reed_Solomon)
+        .dataBlockNum(4)
+        .codingBlockNum(2)
+        .wordSize(4)
+        .packetSize(8)
+        .build();
+    runTest(codec, 4, 2, 32);
+  }
+
+  private void runTest(CodecInterface codec, int k, int m, int size) {
+    Random random = new Random();
+    // Generate data
+    byte[][] data = new byte[k][size];
+    byte[][] copiedData = new byte[k][size];
+    for (int r = 0; r < data.length; ++r) {
+      random.nextBytes(data[r]);
+      System.arraycopy(data[r], 0, copiedData[r], 0, data[r].length);
+    }
+    CodecUtils.printMatrix(data);
+
+    // Encode the data
+    byte[][] coding = codec.encode(data);
+    byte[][] copiedCoding = new byte[coding.length][coding[0].length];
+    for (int r = 0; r < coding.length; ++r) {
+      System.arraycopy(coding[r], 0, copiedCoding[r], 0, coding[r].length);
+    }
+    CodecUtils.printMatrix(coding);
+
+    // Erasure two random blocks
+    int erasures[] = new int[m];
+    Set<Integer> randomSet = new HashSet<Integer>();
+    for (int i = 0; i < m; ++i) {
+      int randomNum = random.nextInt(k + m);
+      while (randomSet.contains(randomNum)) {
+        randomNum = random.nextInt(k + m);
+      }
+      randomSet.add(randomNum);
+      erasures[i] = randomNum;
+
+      for (int c = 0; c < data[0].length; ++c) {
+        if (erasures[i] < k) {
+          data[erasures[i]][c] = 0;
+        } else {
+          coding[erasures[i] - k][c] = 0;
+        }
+      }
+    }
+    CodecUtils.printMatrix(erasures, 1, erasures.length);
+    CodecUtils.printMatrix(data);
+    CodecUtils.printMatrix(coding);
+
+    // Decode data
+    codec.decode(erasures, data, coding);
+    CodecUtils.printMatrix(data);
+    CodecUtils.printMatrix(coding);
+
+    // Check result
+    Assert.assertArrayEquals(copiedData, data);
+    Assert.assertArrayEquals(copiedCoding, coding);
+  }
 }

@@ -15,11 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.xiaomi.infra.ec.crs;
+package com.xiaomi.infra.ec.rs;
 
 import com.google.common.base.Preconditions;
+import com.sun.jna.Pointer;
 
 import com.xiaomi.infra.ec.CodecInterface;
+import com.xiaomi.infra.ec.CodecUtils;
 import com.xiaomi.infra.ec.JerasureLibrary;
 
 /**
@@ -37,9 +39,11 @@ public class CauchyReedSolomonCodec implements CodecInterface {
       int wordSize, int packetSize) {
     Preconditions.checkArgument(dataBlockNum > 0);
     Preconditions.checkArgument(codingBlockNum > 0);
-    Preconditions.checkArgument(wordSize == 8 || wordSize == 16 ||
-        wordSize == 32, "wordSize must be one of 8, 16 and 32");
     Preconditions.checkArgument(packetSize > 0);
+    Preconditions.checkArgument((dataBlockNum + codingBlockNum) < (1<<wordSize),
+        "dataBlocksNum + codingBlocksNum is larger than 2^wordSize");
+    Preconditions.checkArgument(packetSize % 8 == 0,
+        "packetSize must be multiple of 8");
 
     this.dataBlockNum = dataBlockNum;
     this.codingBlockNum = codingBlockNum;
@@ -56,11 +60,18 @@ public class CauchyReedSolomonCodec implements CodecInterface {
   @Override
   public byte[][] encode(byte[][] data) {
     Preconditions.checkArgument(data.length > 0);
+    Preconditions.checkArgument(data[0].length % (wordSize * packetSize) == 0,
+        "data length must be multiple of wordSize * packetSize");
+
+    Pointer[] dataPtrs = CodecUtils.toPointerArray(data);
     int size = data[0].length;
     byte[][] coding = new byte[codingBlockNum][size];
+    Pointer[] codingPtrs = CodecUtils.toPointerArray(coding);
+
     JerasureLibrary.INSTANCE.jerasure_bitmatrix_encode(dataBlockNum,
-        codingBlockNum, wordSize, cauchyBitMatrix, data, coding, size,
-        packetSize);
+        codingBlockNum, wordSize, cauchyBitMatrix, dataPtrs, codingPtrs,
+        size, packetSize);
+    CodecUtils.toByteArray(codingPtrs, coding);
     return coding;
   }
 
@@ -68,10 +79,16 @@ public class CauchyReedSolomonCodec implements CodecInterface {
   @Override
   public void decode(int[] erasures, byte[][]data, byte[][] coding) {
     Preconditions.checkArgument(data.length > 0);
+
+    Pointer[] dataPtrs = CodecUtils.toPointerArray(data);
+    Pointer[] codingPtrs = CodecUtils.toPointerArray(coding);
+    erasures = CodecUtils.adjustErasures(erasures);
     int size = data[0].length;
+
     JerasureLibrary.INSTANCE.jerasure_bitmatrix_decode(dataBlockNum,
         codingBlockNum, wordSize, cauchyBitMatrix, 0, erasures,
-        data, coding, size, packetSize);
+        dataPtrs, codingPtrs, size, packetSize);
+    CodecUtils.copyBackDecoded(dataPtrs, codingPtrs, erasures, data, coding);
   }
 
   /**
@@ -83,9 +100,9 @@ public class CauchyReedSolomonCodec implements CodecInterface {
    * @return The generated Cauchy matrix
    */
   int[] createCauchyMatrix(int k, int m , int w) {
-    int[] matrix = JerasureLibrary.INSTANCE
+    Pointer matrix = JerasureLibrary.INSTANCE
         .cauchy_good_general_coding_matrix(k, m, w);
-    return matrix;
+    return matrix.getIntArray(0, k * m);
   }
 
   /**
@@ -98,8 +115,8 @@ public class CauchyReedSolomonCodec implements CodecInterface {
    * @return The converted bit matrix
    */
   int[] convertToBitMatrix(int k, int m, int w, int[] matrix) {
-    int[] bit_matrix = JerasureLibrary.INSTANCE.jerasure_matrix_to_bitmatrix(
+    Pointer bit_matrix = JerasureLibrary.INSTANCE.jerasure_matrix_to_bitmatrix(
         k, m, w, matrix);
-    return bit_matrix;
+    return bit_matrix.getIntArray(0, k * w * m * w);
   }
 }

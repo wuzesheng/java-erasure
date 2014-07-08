@@ -17,7 +17,7 @@
  */
 package com.xiaomi.infra.ec;
 
-import com.xiaomi.infra.ec.crs.CauchyReedSolomonCodec;
+import com.xiaomi.infra.ec.rs.CauchyReedSolomonCodec;
 import com.xiaomi.infra.ec.rs.ReedSolomonCodec;
 
 /**
