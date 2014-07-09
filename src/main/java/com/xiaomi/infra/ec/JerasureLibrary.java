@@ -37,6 +37,11 @@ public interface JerasureLibrary extends Library {
   /**
    * Allocates and returns a Cauchy matrix in GF(2^w).
    */
+  Pointer cauchy_original_coding_matrix(int k, int m, int w);
+
+  /**
+   * Allocates and returns optimized a Cauchy matrix in GF(2^w).
+   */
   Pointer cauchy_good_general_coding_matrix(int k, int m, int w);
 
   /**

@@ -17,9 +17,7 @@
  */
 package com.xiaomi.infra.ec;
 
-import java.util.HashSet;
 import java.util.Random;
-import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -36,7 +34,7 @@ public class TestErasureCodec {
         .codingBlockNum(3)
         .wordSize(8)
         .build();
-    runTest(codec, 6, 3, 32);
+    runTest(codec, 6, 3, 1<<20, false);
   }
 
   @Test
@@ -47,22 +45,24 @@ public class TestErasureCodec {
         .wordSize(4)
         .packetSize(8)
         .build();
-    runTest(codec, 6, 3, 32);
+    runTest(codec, 6, 3, 1<<20, false);
   }
 
   @Test
-  public void TestScheduledCauchyReedSolomonCodec() {
+  public void TestGoodCauchyReedSolomonCodec() {
     ErasureCodec codec = new Builder(Algorithm.Cauchy_Reed_Solomon)
         .dataBlockNum(6)
         .codingBlockNum(3)
         .wordSize(4)
         .packetSize(8)
-        .schedule(true)
+        .good(true)
         .build();
-    runTest(codec, 6, 3, 32);
+    runTest(codec, 6, 3, 1<<20, false);
   }
 
-  private void runTest(CodecInterface codec, int k, int m, int size) {
+  private void runTest(CodecInterface codec, int k, int m, int size,
+      boolean printMatrix) {
+    long t1 = System.currentTimeMillis();
     Random random = new Random();
     // Generate data
     byte[][] data = new byte[k][size];
@@ -72,7 +72,8 @@ public class TestErasureCodec {
       System.arraycopy(data[r], 0, copiedData[r], 0, data[r].length);
     }
     System.out.println("Original data matrix:");
-    CodecUtils.printMatrix(data);
+    CodecUtils.printMatrix(data, printMatrix);
+    long t2 = System.currentTimeMillis();
 
     // Encode the data
     byte[][] coding = codec.encode(data);
@@ -81,40 +82,51 @@ public class TestErasureCodec {
       System.arraycopy(coding[r], 0, copiedCoding[r], 0, coding[r].length);
     }
     System.out.println("Original coding matrix:");
-    CodecUtils.printMatrix(coding);
+    CodecUtils.printMatrix(coding, printMatrix);
+    long t3 = System.currentTimeMillis();
 
     // Erasure two random blocks
     int erasures[] = new int[m];
-    Set<Integer> randomSet = new HashSet<Integer>();
-    for (int i = 0; i < m; ++i) {
+    int erasured[] = new int[k + m];
+    System.out.println("k=" + k + ", m=" + m);
+    for (int i = 0; i < m;) {
       int randomNum = random.nextInt(k + m);
-      while (randomSet.contains(randomNum)) {
-        randomNum = random.nextInt(k + m);
-      }
-      randomSet.add(randomNum);
       erasures[i] = randomNum;
 
-      for (int c = 0; c < data[0].length; ++c) {
-        if (erasures[i] < k) {
-          data[erasures[i]][c] = 0;
-        } else {
-          coding[erasures[i] - k][c] = 0;
+      if (erasured[erasures[i]] == 0) {
+        erasured[erasures[i]] = 1;
+
+        for (int c = 0; c < data[0].length; ++c) {
+          if (erasures[i] < k) {
+            data[erasures[i]][c] = 0;
+          } else {
+            coding[erasures[i] - k][c] = 0;
+          }
         }
+        ++i;
       }
     }
     System.out.println("Erasures matrix:");
-    CodecUtils.printMatrix(erasures, 1, erasures.length);
+    CodecUtils.printMatrix(erasures, 1, erasures.length, printMatrix);
     System.out.println("Erasured data matrix:");
-    CodecUtils.printMatrix(data);
+    CodecUtils.printMatrix(data, printMatrix);
     System.out.println("Erasured coding matrix:");
-    CodecUtils.printMatrix(coding);
+    CodecUtils.printMatrix(coding, printMatrix);
+    long t4 = System.currentTimeMillis();
 
     // Decode data
     codec.decode(erasures, data, coding);
     System.out.println("Decoded data matrix:");
-    CodecUtils.printMatrix(data);
+    CodecUtils.printMatrix(data, printMatrix);
     System.out.println("Decoded coding matrix:");
-    CodecUtils.printMatrix(coding);
+    CodecUtils.printMatrix(coding, printMatrix);
+    long t5 = System.currentTimeMillis();
+
+    System.out.println("====Time Stats====");
+    System.out.printf("Generate data:\t%d\n", (t2 - t1));
+    System.out.printf("Encode data:\t%d\n", (t3 - t2));
+    System.out.printf("Erasure data:\t%d\n", (t4 - t3));
+    System.out.printf("Decode data:\t%d\n\n", (t5 - t4));
 
     // Check result
     Assert.assertArrayEquals(copiedData, data);

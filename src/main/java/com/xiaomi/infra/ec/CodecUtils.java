@@ -80,26 +80,31 @@ public class CodecUtils {
   /**
    * Prints a byte[][] array as a matrix.
    */
-  public static void printMatrix(byte[][] matrix) {
-    for (int i = 0; i < matrix.length; ++i) {
-      for (int j = 0; j < matrix[i].length; ++j) {
-        System.out.printf("%02x ", matrix[i][j]);
+  public static void printMatrix(byte[][] matrix, boolean printMatrix) {
+    if (printMatrix) {
+      for (int i = 0; i < matrix.length; ++i) {
+        for (int j = 0; j < matrix[i].length; ++j) {
+          System.out.printf("%02x ", matrix[i][j]);
+        }
+        System.out.println();
       }
       System.out.println();
     }
-    System.out.println();
   }
 
   /**
    * Prints a int[] array as a matrix.
    */
-  public static void printMatrix(int[] matrix, int row, int col) {
-    for (int i = 0; i < row; ++i) {
-      for (int j = 0; j < col; ++j) {
-        System.out.printf("%02x ", matrix[i * col + j]);
+  public static void printMatrix(int[] matrix, int row, int col,
+      boolean printMatrix) {
+    if (printMatrix) {
+      for (int i = 0; i < row; ++i) {
+        for (int j = 0; j < col; ++j) {
+          System.out.printf("%02x ", matrix[i * col + j]);
+        }
+        System.out.println();
       }
       System.out.println();
     }
-    System.out.println();
   }
 }
