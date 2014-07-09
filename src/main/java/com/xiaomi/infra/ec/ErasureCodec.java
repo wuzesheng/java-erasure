@@ -44,6 +44,7 @@ public class ErasureCodec implements CodecInterface {
     private int codingBlockNum;
     private int wordSize;
     private int packetSize;
+    private boolean schedule;
 
     public Builder(Algorithm algorithm) {
       this.algorithm = algorithm;
@@ -57,10 +58,10 @@ public class ErasureCodec implements CodecInterface {
           break;
         case Cauchy_Reed_Solomon:
           codec = new CauchyReedSolomonCodec(dataBlockNum, codingBlockNum,
-              wordSize, packetSize);
+              wordSize, packetSize, schedule);
           break;
         default:
-          throw new IllegalArgumentException("Algorithm is supported: "
+          throw new IllegalArgumentException("Algorithm is not supported: "
               + algorithm);
       }
       return new ErasureCodec(codec);
@@ -83,6 +84,11 @@ public class ErasureCodec implements CodecInterface {
 
     public Builder packetSize(int packetSize) {
       this.packetSize = packetSize;
+      return this;
+    }
+
+    public Builder schedule(boolean schedule) {
+      this.schedule = schedule;
       return this;
     }
   }

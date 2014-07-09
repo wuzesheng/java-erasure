@@ -34,9 +34,11 @@ public class CauchyReedSolomonCodec implements CodecInterface {
   private int wordSize;
   private int packetSize;
   private int[] cauchyBitMatrix;
+  private boolean schedule;
+  private Pointer[] schedulePtrs;
 
   public CauchyReedSolomonCodec(int dataBlockNum, int codingBlockNum,
-      int wordSize, int packetSize) {
+      int wordSize, int packetSize, boolean schedule) {
     Preconditions.checkArgument(dataBlockNum > 0);
     Preconditions.checkArgument(codingBlockNum > 0);
     Preconditions.checkArgument(packetSize > 0);
@@ -49,11 +51,17 @@ public class CauchyReedSolomonCodec implements CodecInterface {
     this.codingBlockNum = codingBlockNum;
     this.wordSize = wordSize;
     this.packetSize = packetSize;
+    this.schedule = schedule;
 
     int[] matrix = createCauchyMatrix(dataBlockNum,
         codingBlockNum, wordSize);
     this.cauchyBitMatrix = convertToBitMatrix(dataBlockNum,
         codingBlockNum, wordSize, matrix);
+    if (this.schedule) {
+      schedulePtrs = JerasureLibrary.INSTANCE
+          .jerasure_smart_bitmatrix_to_schedule(this.dataBlockNum,
+              this.codingBlockNum, this.wordSize, this.cauchyBitMatrix);
+    }
   }
 
   /** {@inheritDoc} */
@@ -68,9 +76,15 @@ public class CauchyReedSolomonCodec implements CodecInterface {
     byte[][] coding = new byte[codingBlockNum][size];
     Pointer[] codingPtrs = CodecUtils.toPointerArray(coding);
 
-    JerasureLibrary.INSTANCE.jerasure_bitmatrix_encode(dataBlockNum,
-        codingBlockNum, wordSize, cauchyBitMatrix, dataPtrs, codingPtrs,
-        size, packetSize);
+    if (schedule) {
+      JerasureLibrary.INSTANCE.jerasure_schedule_encode(dataBlockNum,
+          codingBlockNum, wordSize, schedulePtrs, dataPtrs, codingPtrs,
+          size, packetSize);
+    } else {
+      JerasureLibrary.INSTANCE.jerasure_bitmatrix_encode(dataBlockNum,
+          codingBlockNum, wordSize, cauchyBitMatrix, dataPtrs, codingPtrs,
+          size, packetSize);
+    }
     CodecUtils.toByteArray(codingPtrs, coding);
     return coding;
   }
@@ -85,9 +99,15 @@ public class CauchyReedSolomonCodec implements CodecInterface {
     erasures = CodecUtils.adjustErasures(erasures);
     int size = data[0].length;
 
-    JerasureLibrary.INSTANCE.jerasure_bitmatrix_decode(dataBlockNum,
-        codingBlockNum, wordSize, cauchyBitMatrix, 0, erasures,
-        dataPtrs, codingPtrs, size, packetSize);
+    if (schedule) {
+      JerasureLibrary.INSTANCE.jerasure_schedule_decode_lazy(dataBlockNum,
+          codingBlockNum, wordSize, cauchyBitMatrix, erasures, dataPtrs,
+          codingPtrs, size, packetSize, 1);
+    } else {
+      JerasureLibrary.INSTANCE.jerasure_bitmatrix_decode(dataBlockNum,
+          codingBlockNum, wordSize, cauchyBitMatrix, 1, erasures,
+          dataPtrs, codingPtrs, size, packetSize);
+    }
     CodecUtils.copyBackDecoded(dataPtrs, codingPtrs, erasures, data, coding);
   }
 

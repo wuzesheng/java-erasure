@@ -50,6 +50,18 @@ public class TestErasureCodec {
     runTest(codec, 6, 3, 32);
   }
 
+  @Test
+  public void TestScheduledCauchyReedSolomonCodec() {
+    ErasureCodec codec = new Builder(Algorithm.Cauchy_Reed_Solomon)
+        .dataBlockNum(6)
+        .codingBlockNum(3)
+        .wordSize(4)
+        .packetSize(8)
+        .schedule(true)
+        .build();
+    runTest(codec, 6, 3, 32);
+  }
+
   private void runTest(CodecInterface codec, int k, int m, int size) {
     Random random = new Random();
     // Generate data
