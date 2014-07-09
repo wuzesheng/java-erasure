@@ -33,7 +33,6 @@
         <configuration>
           <environmentVariables>
             <LD_LIBRARY_PATH>/usr/local/lib</LD_LIBRARY_PATH>
-            <DYLD_LIBRARY_PATH>/usr/local/lib</DYLD_LIBRARY_PATH>
           </environmentVariables>
         </configuration>
       </plugin>

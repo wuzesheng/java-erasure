@@ -59,6 +59,7 @@ public class TestErasureCodec {
       random.nextBytes(data[r]);
       System.arraycopy(data[r], 0, copiedData[r], 0, data[r].length);
     }
+    System.out.println("Original data matrix:");
     CodecUtils.printMatrix(data);
 
     // Encode the data
@@ -67,6 +68,7 @@ public class TestErasureCodec {
     for (int r = 0; r < coding.length; ++r) {
       System.arraycopy(coding[r], 0, copiedCoding[r], 0, coding[r].length);
     }
+    System.out.println("Original coding matrix:");
     CodecUtils.printMatrix(coding);
 
     // Erasure two random blocks
@@ -88,13 +90,18 @@ public class TestErasureCodec {
         }
       }
     }
+    System.out.println("Erasures matrix:");
     CodecUtils.printMatrix(erasures, 1, erasures.length);
+    System.out.println("Erasured data matrix:");
     CodecUtils.printMatrix(data);
+    System.out.println("Erasured coding matrix:");
     CodecUtils.printMatrix(coding);
 
     // Decode data
     codec.decode(erasures, data, coding);
+    System.out.println("Decoded data matrix:");
     CodecUtils.printMatrix(data);
+    System.out.println("Decoded coding matrix:");
     CodecUtils.printMatrix(coding);
 
     // Check result
