@@ -21,26 +21,13 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-import com.sun.jna.Platform;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.xiaomi.infra.ec.ErasureCodec.Algorithm;
 import com.xiaomi.infra.ec.ErasureCodec.Builder;
 
 public class TestErasureCodec {
-
-  @BeforeClass
-  public static void setUpClass() {
-    if (Platform.isMac()) {
-      System.setProperty("jna.library.path",
-          "/usr/local/lib/libJerasure.dylib");
-    } if (Platform.isLinux()) {
-      System.setProperty("jna.library.path",
-          "/usr/local/lib/libJerasure.so");
-    }
-  }
 
   @Test
   public void TestReedSolomonCodec() {
