@@ -88,7 +88,6 @@ public class TestErasureCodec {
     // Erasure two random blocks
     int erasures[] = new int[m];
     int erasured[] = new int[k + m];
-    System.out.println("k=" + k + ", m=" + m);
     for (int i = 0; i < m;) {
       int randomNum = random.nextInt(k + m);
       erasures[i] = randomNum;
