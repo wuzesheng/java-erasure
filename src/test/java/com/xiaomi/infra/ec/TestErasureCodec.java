@@ -34,7 +34,7 @@ public class TestErasureCodec {
         .codingBlockNum(3)
         .wordSize(8)
         .build();
-    runTest(codec, 6, 3, 1<<20, false);
+    runTest(codec, 6, 3, 32, true);
   }
 
   @Test
@@ -45,7 +45,7 @@ public class TestErasureCodec {
         .wordSize(4)
         .packetSize(8)
         .build();
-    runTest(codec, 6, 3, 1<<20, false);
+    runTest(codec, 6, 3, 32, true);
   }
 
   @Test
@@ -57,7 +57,7 @@ public class TestErasureCodec {
         .packetSize(8)
         .good(true)
         .build();
-    runTest(codec, 6, 3, 1<<20, false);
+    runTest(codec, 6, 3, 32, true);
   }
 
   private void runTest(CodecInterface codec, int k, int m, int size,
