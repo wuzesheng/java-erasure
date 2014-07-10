@@ -17,6 +17,7 @@
  */
 package com.xiaomi.infra.ec;
 
+import java.util.Arrays;
 import java.util.Random;
 
 import org.junit.Assert;
@@ -85,7 +86,7 @@ public class TestErasureCodec {
     CodecUtils.printMatrix(coding, printMatrix);
     long t3 = System.currentTimeMillis();
 
-    // Erasure two random blocks
+    // Erasure m random blocks
     int erasures[] = new int[m];
     int erasured[] = new int[k + m];
     for (int i = 0; i < m;) {
@@ -95,12 +96,10 @@ public class TestErasureCodec {
       if (erasured[erasures[i]] == 0) {
         erasured[erasures[i]] = 1;
 
-        for (int c = 0; c < data[0].length; ++c) {
-          if (erasures[i] < k) {
-            data[erasures[i]][c] = 0;
-          } else {
-            coding[erasures[i] - k][c] = 0;
-          }
+        if (erasures[i] < k) {
+          Arrays.fill(data[erasures[i]], 0, data[0].length, (byte)0);
+        } else {
+          Arrays.fill(coding[erasures[i] - k], 0, data[0].length, (byte)0);
         }
         ++i;
       }

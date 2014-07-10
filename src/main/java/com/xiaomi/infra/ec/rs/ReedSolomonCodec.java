@@ -75,10 +75,14 @@ public class ReedSolomonCodec implements CodecInterface {
     erasures = CodecUtils.adjustErasures(erasures);
     int size = data[0].length;
 
-    JerasureLibrary.INSTANCE.jerasure_matrix_decode(dataBlockNum,
+    int ret = JerasureLibrary.INSTANCE.jerasure_matrix_decode(dataBlockNum,
         codingBlockNum, wordSize, vandermondeMatrix, 1, erasures,
         dataPtrs, codingPtrs, size);
-    CodecUtils.copyBackDecoded(dataPtrs, codingPtrs, erasures, data, coding);
+    if (ret == 0) {
+      CodecUtils.copyBackDecoded(dataPtrs, codingPtrs, erasures, data, coding);
+    } else {
+      throw new RuntimeException("Decode fail, return_code=" + ret);
+    }
   }
 
   /**

@@ -23,7 +23,7 @@ package com.xiaomi.infra.ec;
 public interface CodecInterface {
 
   /**
-   * Encodes specified data blocks.
+   * Encodes specified data blocks. This method is thread safe and reenterable.
    *
    * @param data The data blocks matrix
    * @return The coding blocks matrix
@@ -31,7 +31,8 @@ public interface CodecInterface {
   public byte[][] encode(byte[][] data);
 
   /**
-   * Decodes specified failed data blocks.
+   * Decodes specified failed data blocks. This method is thread safe and
+   * reenterable.
    *
    * @param erasures The failed data blocks list
    * @param data The data blocks matrix

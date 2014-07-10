@@ -97,10 +97,14 @@ public class CauchyReedSolomonCodec implements CodecInterface {
     erasures = CodecUtils.adjustErasures(erasures);
     int size = data[0].length;
 
-    JerasureLibrary.INSTANCE.jerasure_schedule_decode_lazy(dataBlockNum,
-        codingBlockNum, wordSize, cauchyBitMatrix, erasures, dataPtrs,
-        codingPtrs, size, packetSize, 1);
-    CodecUtils.copyBackDecoded(dataPtrs, codingPtrs, erasures, data, coding);
+    int ret = JerasureLibrary.INSTANCE.jerasure_schedule_decode_lazy(
+        dataBlockNum, codingBlockNum, wordSize, cauchyBitMatrix, erasures,
+        dataPtrs, codingPtrs, size, packetSize, 1);
+    if (ret == 0) {
+      CodecUtils.copyBackDecoded(dataPtrs, codingPtrs, erasures, data, coding);
+    } else {
+      throw new RuntimeException("Decode fail, return_code=" + ret);
+    }
   }
 
   /**
