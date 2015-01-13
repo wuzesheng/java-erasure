@@ -61,6 +61,52 @@ public class TestErasureCodec {
     runTest(codec, 6, 3, 32, true);
   }
 
+  @Test
+  public void testWithZeroLines() {
+    ErasureCodec codec = new Builder(Algorithm.Reed_Solomon)
+        .dataBlockNum(6)
+        .codingBlockNum(3)
+        .wordSize(8)
+        .build();
+    byte[][] data = new byte[6][8];
+    byte[][] coding = new byte[3][8];
+
+    data[0] = new byte[]{-57, 0, 103, 111, -20, -46, -78, 85};
+    data[1] = new byte[]{27, 80, -92, 33, -80, 17, -125, 72};
+    data[2] = new byte[]{111, -97, 33, 75, 116, 80, -109, -127};
+
+    coding[1] = new byte[]{35, -125, -20, -71, 40, 46, 40, 39};
+    CodecUtils.printMatrix(data, true);
+    CodecUtils.printMatrix(coding, true);
+
+    int[] erasures = new int[]{3, 6};
+    codec.decode(erasures, data, coding);
+    CodecUtils.printMatrix(data, true);
+    CodecUtils.printMatrix(coding, true);
+
+    /*
+    Random random = new Random();
+    for (int i = 0; i < data.length; ++i) {
+      if (i < 2) {
+        random.nextBytes(data[i]);
+      } else {
+        Arrays.fill(data[i], 0, data[i].length, (byte)0);
+      }
+    }
+    CodecUtils.printMatrix(data, true);
+
+    byte[][] coding = codec.encode(data);
+    CodecUtils.printMatrix(coding, true);
+
+    int[] erasures = {1, 6};
+    Arrays.fill(data[1], 0, data[1].length, (byte)0);
+    Arrays.fill(coding[0], 0, coding[0].length, (byte)0);
+    codec.decode(erasures, data, coding);
+    CodecUtils.printMatrix(data, true);
+    CodecUtils.printMatrix(coding, true);
+    */
+  }
+
   private void runTest(CodecInterface codec, int k, int m, int size,
       boolean printMatrix) {
     long t1 = System.currentTimeMillis();
