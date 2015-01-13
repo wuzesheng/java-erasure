@@ -1,17 +1,17 @@
 # Java erasure
 
-A Java erasure codes wrapper library for Jerasure(https://bitbucket.org/jimplank/jerasure)
+A Java erasure codes wrapper library for Jerasure(http://jerasure.org/)
 
 ## Usage
 ### Install gf-complete
-    git clone git@bitbucket.org:jimplank/gf-complete.git
+    git clone git@lab.jerasure.org:jerasure/gf-complete.git
     cd gf-complete
     ./autogen.sh
     ./configure
     make
     sudo make install
 ### Install jerasure
-    git clone git@bitbucket.org:jimplank/jerasure.git
+    git clone git@lab.jerasure.org:jerasure/jerasure.git
     cd jerasure
     autoreconf --force --install -I m4
     ./configure
@@ -19,8 +19,8 @@ A Java erasure codes wrapper library for Jerasure(https://bitbucket.org/jimplank
     sudo make install
 ### Compile and Run Your Application
 #### 1. Add following dependency to your application's pom.xml:
-    <groupId>com.xiaomi.infra</groupId>    
-    <artifactId>java-erasure</artifactId>  
+    <groupId>com.xiaomi.infra</groupId>
+    <artifactId>java-erasure</artifactId>
     <version>1.0-SNAPSHOT</version>
 #### 2. Compile your application
     mvn clean package
@@ -30,4 +30,3 @@ A Java erasure codes wrapper library for Jerasure(https://bitbucket.org/jimplank
       Linux:   -Djna.library.path=${path_to_libJerasure.so}
       Windows: -Djna.library.path=${path_to_libJerasure.dll}
     Then run your application.
-    
